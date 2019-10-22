@@ -13,7 +13,6 @@ const assert = require('assert');
 const tmpDir = tmpdir.path;
 
 tmpdir.refresh();
-common.crashOnUnhandledRejection();
 
 async function validateWriteFile() {
   const filePathForHandle = path.resolve(tmpDir, 'tmp-write-file2.txt');
@@ -23,6 +22,8 @@ async function validateWriteFile() {
   await fileHandle.writeFile(buffer);
   const readFileData = fs.readFileSync(filePathForHandle);
   assert.deepStrictEqual(buffer, readFileData);
+
+  await fileHandle.close();
 }
 
 validateWriteFile()

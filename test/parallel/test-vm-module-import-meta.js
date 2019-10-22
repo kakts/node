@@ -1,22 +1,19 @@
 'use strict';
 
-// Flags: --experimental-vm-modules --harmony-import-meta
+// Flags: --experimental-vm-modules
 
 const common = require('../common');
 const assert = require('assert');
-const { Module } = require('vm');
-
-common.crashOnUnhandledRejection();
+const { SourceTextModule } = require('vm');
 
 async function testBasic() {
-  const m = new Module('import.meta;', {
+  const m = new SourceTextModule('import.meta;', {
     initializeImportMeta: common.mustCall((meta, module) => {
       assert.strictEqual(module, m);
       meta.prop = 42;
     })
   });
   await m.link(common.mustNotCall());
-  m.instantiate();
   const { result } = await m.evaluate();
   assert.strictEqual(typeof result, 'object');
   assert.strictEqual(Object.getPrototypeOf(result), null);
@@ -29,7 +26,7 @@ async function testInvalid() {
     null, {}, 0, Symbol.iterator, [], 'string', false
   ]) {
     common.expectsError(() => {
-      new Module('', {
+      new SourceTextModule('', {
         initializeImportMeta: invalidValue
       });
     }, {

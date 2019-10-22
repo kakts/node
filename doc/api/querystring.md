@@ -1,6 +1,6 @@
 # Query String
 
-<!--introduced_in=v0.10.0-->
+<!--introduced_in=v0.1.25-->
 
 > Stability: 2 - Stable
 
@@ -12,6 +12,20 @@ query strings. It can be accessed using:
 ```js
 const querystring = require('querystring');
 ```
+
+## querystring.decode()
+<!-- YAML
+added: v0.1.99
+-->
+
+The `querystring.decode()` function is an alias for `querystring.parse()`.
+
+## querystring.encode()
+<!-- YAML
+added: v0.1.99
+-->
+
+The `querystring.encode()` function is an alias for `querystring.stringify()`.
 
 ## querystring.escape(str)
 <!-- YAML
@@ -29,7 +43,7 @@ generally not expected to be used directly. It is exported primarily to allow
 application code to provide a replacement percent-encoding implementation if
 necessary by assigning `querystring.escape` to an alternative function.
 
-## querystring.parse(str[, sep[, eq[, options]]])
+## querystring.parse(str\[, sep\[, eq\[, options\]\]\])
 <!-- YAML
 added: v0.1.25
 changes:
@@ -76,8 +90,7 @@ are not defined and *will not work*.
 
 By default, percent-encoded characters within the query string will be assumed
 to use UTF-8 encoding. If an alternative character encoding is used, then an
-alternative `decodeURIComponent` option will need to be specified as illustrated
-in the following example:
+alternative `decodeURIComponent` option will need to be specified:
 
 ```js
 // Assuming gbkDecodeURIComponent function already exists...
@@ -86,7 +99,7 @@ querystring.parse('w=%D6%D0%CE%C4&foo=bar', null, null,
                   { decodeURIComponent: gbkDecodeURIComponent });
 ```
 
-## querystring.stringify(obj[, sep[, eq[, options]]])
+## querystring.stringify(obj\[, sep\[, eq\[, options\]\]\])
 <!-- YAML
 added: v0.1.25
 -->
@@ -110,16 +123,15 @@ Any other input values will be coerced to empty strings.
 
 ```js
 querystring.stringify({ foo: 'bar', baz: ['qux', 'quux'], corge: '' });
-// returns 'foo=bar&baz=qux&baz=quux&corge='
+// Returns 'foo=bar&baz=qux&baz=quux&corge='
 
 querystring.stringify({ foo: 'bar', baz: 'qux' }, ';', ':');
-// returns 'foo:bar;baz:qux'
+// Returns 'foo:bar;baz:qux'
 ```
 
 By default, characters requiring percent-encoding within the query string will
 be encoded as UTF-8. If an alternative encoding is required, then an alternative
-`encodeURIComponent` option will need to be specified as illustrated in the
-following example:
+`encodeURIComponent` option will need to be specified:
 
 ```js
 // Assuming gbkEncodeURIComponent function already exists,
@@ -132,6 +144,7 @@ querystring.stringify({ w: '中文', foo: 'bar' }, null, null,
 <!-- YAML
 added: v0.1.25
 -->
+
 * `str` {string}
 
 The `querystring.unescape()` method performs decoding of URL percent-encoded

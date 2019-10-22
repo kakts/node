@@ -3,7 +3,6 @@
 const common = require('../common');
 const { Writable } = require('stream');
 const assert = require('assert');
-const { inherits } = require('util');
 
 {
   const write = new Writable({
@@ -14,6 +13,20 @@ const { inherits } = require('util');
   write.on('close', common.mustCall());
 
   write.destroy();
+  assert.strictEqual(write.destroyed, true);
+}
+
+{
+  const write = new Writable({
+    write(chunk, enc, cb) {
+      this.destroy(new Error('asd'));
+      cb();
+    }
+  });
+
+  write.on('error', common.mustCall());
+  write.on('finish', common.mustNotCall());
+  write.end('asd');
   assert.strictEqual(write.destroyed, true);
 }
 
@@ -70,7 +83,7 @@ const { inherits } = require('util');
   write.on('finish', common.mustNotCall('no finish event'));
   write.on('close', common.mustCall());
 
-  // error is swallowed by the custom _destroy
+  // Error is swallowed by the custom _destroy
   write.on('error', common.mustNotCall('no error event'));
 
   write.destroy(expected);
@@ -154,6 +167,32 @@ const { inherits } = require('util');
 }
 
 {
+  const writable = new Writable({
+    destroy: common.mustCall(function(err, cb) {
+      process.nextTick(cb, new Error('kaboom 1'));
+    }),
+    write(chunk, enc, cb) {
+      cb();
+    }
+  });
+
+  writable.on('close', common.mustCall());
+  writable.on('error', common.expectsError({
+    type: Error,
+    message: 'kaboom 2'
+  }));
+
+  writable.destroy();
+  assert.strictEqual(writable.destroyed, true);
+  assert.strictEqual(writable._writableState.errorEmitted, false);
+
+  // Test case where `writable.destroy()` is called again with an error before
+  // the `_destroy()` callback is called.
+  writable.destroy(new Error('kaboom 2'));
+  assert.strictEqual(writable._writableState.errorEmitted, true);
+}
+
+{
   const write = new Writable({
     write(chunk, enc, cb) { cb(); }
   });
@@ -161,7 +200,7 @@ const { inherits } = require('util');
   write.destroyed = true;
   assert.strictEqual(write.destroyed, true);
 
-  // the internal destroy() mechanism should not be triggered
+  // The internal destroy() mechanism should not be triggered
   write.on('close', common.mustNotCall());
   write.destroy();
 }
@@ -173,13 +212,14 @@ const { inherits } = require('util');
     Writable.call(this);
   }
 
-  inherits(MyWritable, Writable);
+  Object.setPrototypeOf(MyWritable.prototype, Writable.prototype);
+  Object.setPrototypeOf(MyWritable, Writable);
 
   new MyWritable();
 }
 
 {
-  // destroy and destroy callback
+  // Destroy and destroy callback
   const write = new Writable({
     write(chunk, enc, cb) { cb(); }
   });
@@ -189,7 +229,7 @@ const { inherits } = require('util');
   const expected = new Error('kaboom');
 
   write.destroy(expected, common.mustCall(function(err) {
-    assert.strictEqual(expected, err);
+    assert.strictEqual(err, expected);
   }));
 }
 
@@ -205,4 +245,50 @@ const { inherits } = require('util');
   write.destroy();
   write._undestroy();
   write.end();
+}
+
+{
+  const write = new Writable();
+
+  write.destroy();
+  write.on('error', common.expectsError({
+    type: Error,
+    code: 'ERR_STREAM_DESTROYED',
+    message: 'Cannot call write after a stream was destroyed'
+  }));
+  write.write('asd', common.expectsError({
+    type: Error,
+    code: 'ERR_STREAM_DESTROYED',
+    message: 'Cannot call write after a stream was destroyed'
+  }));
+}
+
+{
+  const write = new Writable({
+    write(chunk, enc, cb) { cb(); }
+  });
+
+  write.on('error', common.expectsError({
+    type: Error,
+    code: 'ERR_STREAM_DESTROYED',
+    message: 'Cannot call write after a stream was destroyed'
+  }));
+
+  write.cork();
+  write.write('asd', common.mustCall());
+  write.uncork();
+
+  write.cork();
+  write.write('asd', common.expectsError({
+    type: Error,
+    code: 'ERR_STREAM_DESTROYED',
+    message: 'Cannot call write after a stream was destroyed'
+  }));
+  write.destroy();
+  write.write('asd', common.expectsError({
+    type: Error,
+    code: 'ERR_STREAM_DESTROYED',
+    message: 'Cannot call write after a stream was destroyed'
+  }));
+  write.uncork();
 }

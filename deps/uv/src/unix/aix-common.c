@@ -155,19 +155,8 @@ int uv_exepath(char* buffer, size_t* size) {
   }
 }
 
-void uv_free_cpu_info(uv_cpu_info_t* cpu_infos, int count) {
-  int i;
 
-  for (i = 0; i < count; ++i) {
-    uv__free(cpu_infos[i].model);
-  }
-
-  uv__free(cpu_infos);
-}
-
-
-int uv_interface_addresses(uv_interface_address_t** addresses,
-  int* count) {
+int uv_interface_addresses(uv_interface_address_t** addresses, int* count) {
   uv_interface_address_t* address;
   int sockfd, inet6, size = 1;
   struct ifconf ifc;
@@ -175,6 +164,7 @@ int uv_interface_addresses(uv_interface_address_t** addresses,
   struct sockaddr_dl* sa_addr;
 
   *count = 0;
+  *addresses = NULL;
 
   if (0 > (sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP))) {
     return UV__ERR(errno);
@@ -215,6 +205,11 @@ int uv_interface_addresses(uv_interface_address_t** addresses,
       continue;
 
     (*count)++;
+  }
+
+  if (*count == 0) {
+    uv__close(sockfd);
+    return 0;
   }
 
   /* Alloc the return interface structs */

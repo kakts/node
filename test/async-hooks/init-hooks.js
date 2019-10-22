@@ -1,7 +1,7 @@
 'use strict';
 // Flags: --expose-gc
 
-require('../common');
+const common = require('../common');
 const assert = require('assert');
 const async_hooks = require('async_hooks');
 const util = require('util');
@@ -120,8 +120,7 @@ class ActivityCollector {
     }
     if (violations.length) {
       console.error(violations.join('\n\n') + '\n');
-      assert.fail(violations.length, 0,
-                  `${violations.length} failed sanity checks`);
+      assert.fail(`${violations.length} failed sanity checks`);
     }
   }
 
@@ -159,9 +158,13 @@ class ActivityCollector {
       // events this makes sense for a few tests in which we enable some hooks
       // later
       if (this._allowNoInit) {
-        const stub = { uid, type: 'Unknown', handleIsObject: true };
+        const stub = { uid, type: 'Unknown', handleIsObject: true, handle: {} };
         this._activities.set(uid, stub);
         return stub;
+      } else if (!common.isMainThread) {
+        // Worker threads start main script execution inside of an AsyncWrap
+        // callback, so we don't yield errors for these.
+        return null;
       } else {
         const err = new Error(`Found a handle whose ${hook}` +
                               ' hook was invoked but not its init hook');
@@ -181,7 +184,8 @@ class ActivityCollector {
       triggerAsyncId,
       // In some cases (e.g. Timeout) the handle is a function, thus the usual
       // `typeof handle === 'object' && handle !== null` check can't be used.
-      handleIsObject: handle instanceof Object
+      handleIsObject: handle instanceof Object,
+      handle
     };
     this._stamp(activity, 'init');
     this._activities.set(uid, activity);

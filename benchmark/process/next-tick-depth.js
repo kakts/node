@@ -1,10 +1,8 @@
 'use strict';
 const common = require('../common.js');
 const bench = common.createBenchmark(main, {
-  n: [12e6]
+  n: [7e6]
 });
-
-process.maxTickDepth = Infinity;
 
 function main({ n }) {
   let counter = n;

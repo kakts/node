@@ -73,6 +73,11 @@ class HandleWrap : public AsyncWrap {
   virtual void Close(
       v8::Local<v8::Value> close_callback = v8::Local<v8::Value>());
 
+  static v8::Local<v8::FunctionTemplate> GetConstructorTemplate(
+      Environment* env);
+
+  void MakeWeak();  // This hides BaseObject::MakeWeak()
+
  protected:
   HandleWrap(Environment* env,
              v8::Local<v8::Object> object,
@@ -82,6 +87,10 @@ class HandleWrap : public AsyncWrap {
 
   void MarkAsInitialized();
   void MarkAsUninitialized();
+
+  inline bool IsHandleClosing() const {
+    return state_ == kClosing || state_ == kClosed;
+  }
 
  private:
   friend class Environment;
@@ -95,7 +104,7 @@ class HandleWrap : public AsyncWrap {
   // refer to `doc/guides/node-postmortem-support.md`
   friend int GenDebugSymbols();
   ListNode<HandleWrap> handle_wrap_queue_;
-  enum { kInitialized, kClosing, kClosingWithCallback, kClosed } state_;
+  enum { kInitialized, kClosing, kClosed } state_;
   uv_handle_t* const handle_;
 };
 

@@ -67,7 +67,7 @@ server.on('listening', common.mustCall(() => {
   }));
   req.on('response', common.mustCall((res) => {
     assert.ok(got_continue, 'Full response received before 100 Continue');
-    assert.strictEqual(200, res.statusCode,
+    assert.strictEqual(res.statusCode, 200,
                        `Final status code was ${res.statusCode}, not 200.`);
     res.setEncoding('utf8');
     res.on('data', function(chunk) { body += chunk; });
@@ -76,7 +76,6 @@ server.on('listening', common.mustCall(() => {
       assert.strictEqual(body, test_res_body);
       assert.ok('abcd' in res.headers, 'Response headers missing.');
       server.close();
-      process.exit();
     }));
   }));
 }));

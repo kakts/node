@@ -6,7 +6,6 @@ const common = require('../common');
 const assert = require('assert');
 const { fork } = require('child_process');
 const http = require('http');
-const { kTimeout } = require('internal/timers');
 
 if (process.argv[2] === 'child') {
   process.once('message', (req, socket) => {
@@ -18,6 +17,8 @@ if (process.argv[2] === 'child') {
   process.send('ready');
   return;
 }
+
+const { kTimeout } = require('internal/timers');
 
 let child;
 let socket;
@@ -45,7 +46,7 @@ server.listen(0, common.mustCall(() => {
     }, common.mustCall((res) => {
       res.on('data', () => {});
       res.on('end', common.mustCall(() => {
-        assert.strictEqual(socket[kTimeout]._idleTimeout, -1);
+        assert.strictEqual(socket[kTimeout], null);
         assert.strictEqual(socket.parser, null);
         assert.strictEqual(socket._httpMessage, null);
       }));

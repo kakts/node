@@ -20,6 +20,7 @@
           '_UNIX03_SOURCE',
           '_UNIX03_WITHDRAWN',
           '_OPEN_SYS_IF_EXT',
+          '_OPEN_SYS_SOCK_EXT3',
           '_OPEN_SYS_SOCK_IPV6',
           '_OPEN_MSGQ_EXT',
           '_XOPEN_SOURCE_EXTENDED',
@@ -64,15 +65,21 @@
       'sources': [
         'common.gypi',
         'include/uv.h',
-        'include/tree.h',
-        'include/uv-errno.h',
-        'include/uv-threadpool.h',
-        'include/uv-version.h',
+        'include/uv/tree.h',
+        'include/uv/errno.h',
+        'include/uv/threadpool.h',
+        'include/uv/version.h',
         'src/fs-poll.c',
         'src/heap-inl.h',
+        'src/idna.c',
+        'src/idna.h',
         'src/inet.c',
         'src/queue.h',
+        'src/random.c',
+        'src/strscpy.c',
+        'src/strscpy.h',
         'src/threadpool.c',
+        'src/timer.c',
         'src/uv-data-getter-setters.c',
         'src/uv-common.c',
         'src/uv-common.h',
@@ -95,7 +102,7 @@
             '_GNU_SOURCE',
           ],
           'sources': [
-            'include/uv-win.h',
+            'include/uv/win.h',
             'src/win/async.c',
             'src/win/atomicops-inl.h',
             'src/win/core.c',
@@ -115,7 +122,6 @@
             'src/win/poll.c',
             'src/win/process.c',
             'src/win/process-stdio.c',
-            'src/win/req.c',
             'src/win/req-inl.h',
             'src/win/signal.c',
             'src/win/snprintf.c',
@@ -123,7 +129,6 @@
             'src/win/stream-inl.h',
             'src/win/tcp.c',
             'src/win/tty.c',
-            'src/win/timer.c',
             'src/win/udp.c',
             'src/win/util.c',
             'src/win/winapi.c',
@@ -144,12 +149,12 @@
           },
         }, { # Not Windows i.e. POSIX
           'sources': [
-            'include/uv-unix.h',
-            'include/uv-linux.h',
-            'include/uv-sunos.h',
-            'include/uv-darwin.h',
-            'include/uv-bsd.h',
-            'include/uv-aix.h',
+            'include/uv/unix.h',
+            'include/uv/linux.h',
+            'include/uv/sunos.h',
+            'include/uv/darwin.h',
+            'include/uv/bsd.h',
+            'include/uv/aix.h',
             'src/unix/async.c',
             'src/unix/atomic-ops.h',
             'src/unix/core.c',
@@ -163,12 +168,12 @@
             'src/unix/pipe.c',
             'src/unix/poll.c',
             'src/unix/process.c',
+            'src/unix/random-devurandom.c',
             'src/unix/signal.c',
             'src/unix/spinlock.h',
             'src/unix/stream.c',
             'src/unix/tcp.c',
             'src/unix/thread.c',
-            'src/unix/timer.c',
             'src/unix/tty.c',
             'src/unix/udp.c',
           ],
@@ -199,7 +204,7 @@
             ['uv_library=="shared_library" and OS!="mac" and OS!="zos"', {
               # This will cause gyp to set soname
               # Must correspond with UV_VERSION_MAJOR
-              # in include/uv-version.h
+              # in include/uv/version.h
               'product_extension': 'so.1',
             }],
           ],
@@ -223,7 +228,8 @@
           'sources': [
             'src/unix/darwin.c',
             'src/unix/fsevents.c',
-            'src/unix/darwin-proctitle.c'
+            'src/unix/darwin-proctitle.c',
+            'src/unix/random-getentropy.c',
           ],
           'defines': [
             '_DARWIN_USE_64_BIT_INODE=1',
@@ -238,8 +244,9 @@
             'src/unix/linux-syscalls.c',
             'src/unix/linux-syscalls.h',
             'src/unix/procfs-exepath.c',
+            'src/unix/random-getrandom.c',
+            'src/unix/random-sysctl.c',
             'src/unix/sysinfo-loadavg.c',
-            'src/unix/sysinfo-memory.c',
           ],
           'link_settings': {
             'libraries': [ '-ldl', '-lrt' ],
@@ -318,8 +325,14 @@
         [ 'OS=="freebsd" or OS=="dragonflybsd"', {
           'sources': [ 'src/unix/freebsd.c' ],
         }],
+        [ 'OS=="freebsd"', {
+          'sources': [ 'src/unix/random-getrandom.c' ],
+        }],
         [ 'OS=="openbsd"', {
-          'sources': [ 'src/unix/openbsd.c' ],
+          'sources': [
+            'src/unix/openbsd.c',
+            'src/unix/random-getentropy.c',
+          ],
         }],
         [ 'OS=="netbsd"', {
           'link_settings': {
@@ -328,7 +341,10 @@
           'sources': [ 'src/unix/netbsd.c' ],
         }],
         [ 'OS in "freebsd dragonflybsd openbsd netbsd".split()', {
-          'sources': [ 'src/unix/posix-hrtime.c' ],
+          'sources': [
+            'src/unix/posix-hrtime.c',
+            'src/unix/bsd-proctitle.c'
+          ],
         }],
         [ 'OS in "ios mac freebsd dragonflybsd openbsd netbsd".split()', {
           'sources': [

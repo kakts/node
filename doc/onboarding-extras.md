@@ -34,11 +34,12 @@ request.
     they pass, **probably** minor or patch
   * A breaking change helper
     ([full source](https://gist.github.com/chrisdickinson/ba532fa0e4e243fb7b44)):
-  ```sh
-  SHOW=$(git show-ref -d $(git describe --abbrev=0) | tail -n1 | awk '{print $1}')
-  git checkout $(git show -s --pretty='%T' $SHOW) -- test
-  make -j4 test
-  ```
+
+    ```sh
+    SHOW=$(git show-ref -d $(git describe --abbrev=0) | tail -n1 | awk '{print $1}')
+    git checkout $(git show -s --pretty='%T' $SHOW) -- test
+    make -j4 test
+    ```
 
 ### LTS/Version labels
 
@@ -83,17 +84,3 @@ need to be attached anymore, as only important bugfixes will be included.
 * Architecture labels
   * `arm`, `mips`, `s390`, `ppc`
   * No x86{_64}, since that is the implied default
-
-## Updating Node.js from Upstream
-
-* `git remote add upstream git://github.com/nodejs/node.git`
-
-to update from nodejs/node:
-
-* `git checkout master`
-* `git remote update -p` OR `git fetch --all`
-* `git merge --ff-only upstream/master` (or `REMOTENAME/BRANCH`)
-
-## Best practices
-
-* When making PRs, spend time writing a thorough description.

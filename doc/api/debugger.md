@@ -11,7 +11,7 @@ Node.js includes an out-of-process debugging utility accessible via a
 with the `inspect` argument followed by the path to the script to debug; a
 prompt will be displayed indicating successful launch of the debugger:
 
-```txt
+```console
 $ node inspect myscript.js
 < Debugger listening on ws://127.0.0.1:9229/80e7a814-7cd3-49fb-921a-2e02228cd5ba
 < For help, see: https://nodejs.org/en/docs/inspector
@@ -42,7 +42,7 @@ console.log('hello');
 
 Once the debugger is run, a breakpoint will occur at line 3:
 
-```txt
+```console
 $ node inspect myscript.js
 < Debugger listening on ws://127.0.0.1:9229/80e7a814-7cd3-49fb-921a-2e02228cd5ba
 < For help, see: https://nodejs.org/en/docs/inspector
@@ -124,7 +124,7 @@ on line 1
 It is also possible to set a breakpoint in a file (module) that
 is not loaded yet:
 
-```txt
+```console
 $ node inspect main.js
 < Debugger listening on ws://127.0.0.1:9229/4e3db158-9791-4274-8909-914f7facf3bd
 < For help, see: https://nodejs.org/en/docs/inspector
@@ -183,16 +183,19 @@ e.g. `--inspect=9222` will accept DevTools connections on port 9222.
 To break on the first line of the application code, pass the `--inspect-brk`
 flag instead of `--inspect`.
 
-```txt
+```console
 $ node --inspect index.js
 Debugger listening on 127.0.0.1:9229.
 To start debugging, open the following URL in Chrome:
-    chrome-devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=127.0.0.1:9229/dc9010dd-f8b8-4ac5-a510-c1a114ec7d29
+    chrome-devtools://devtools/bundled/js_app.html?experiments=true&v8only=true&ws=127.0.0.1:9229/dc9010dd-f8b8-4ac5-a510-c1a114ec7d29
 ```
 
 (In the example above, the UUID dc9010dd-f8b8-4ac5-a510-c1a114ec7d29
 at the end of the URL is generated on the fly, it varies in different
 debugging sessions.)
+
+If the Chrome browser is older than 66.0.3345.0,
+use `inspector.html` instead of `js_app.html` in the above URL.
 
 [Chrome DevTools Protocol]: https://chromedevtools.github.io/devtools-protocol/
 [V8 Inspector]: #debugger_v8_inspector_integration_for_node_js

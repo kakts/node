@@ -86,13 +86,13 @@ API
 
 .. c:function:: int uv_tcp_getsockname(const uv_tcp_t* handle, struct sockaddr* name, int* namelen)
 
-    Get the current address to which the handle is bound. `addr` must point to
+    Get the current address to which the handle is bound. `name` must point to
     a valid and big enough chunk of memory, ``struct sockaddr_storage`` is
     recommended for IPv4 and IPv6 support.
 
 .. c:function:: int uv_tcp_getpeername(const uv_tcp_t* handle, struct sockaddr* name, int* namelen)
 
-    Get the address of the peer connected to the handle. `addr` must point to
+    Get the address of the peer connected to the handle. `name` must point to
     a valid and big enough chunk of memory, ``struct sockaddr_storage`` is
     recommended for IPv4 and IPv6 support.
 
@@ -113,3 +113,13 @@ API
         mapping
 
 .. seealso:: The :c:type:`uv_stream_t` API functions also apply.
+
+.. c:function:: int uv_tcp_close_reset(uv_tcp_t* handle, uv_close_cb close_cb)
+
+    Resets a TCP connection by sending a RST packet. This is accomplished by
+    setting the `SO_LINGER` socket option with a linger interval of zero and
+    then calling :c:func:`uv_close`.
+    Due to some platform inconsistencies, mixing of :c:func:`uv_shutdown` and
+    :c:func:`uv_tcp_close_reset` calls is not allowed.
+
+    .. versionadded:: 1.32.0

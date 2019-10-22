@@ -21,36 +21,32 @@ The `url` module provides two APIs for working with URLs: a legacy API that is
 Node.js specific, and a newer API that implements the same
 [WHATWG URL Standard][] used by web browsers.
 
-While the Legacy API has not been deprecated, it is maintained solely for
-backwards compatibility with existing applications. New application code
-should use the WHATWG API.
-
 A comparison between the WHATWG and Legacy APIs is provided below. Above the URL
-`'http://user:pass@sub.host.com:8080/p/a/t/h?query=string#hash'`, properties of
-an object returned by the legacy `url.parse()` are shown. Below it are
+`'http://user:pass@sub.example.com:8080/p/a/t/h?query=string#hash'`, properties
+of an object returned by the legacy `url.parse()` are shown. Below it are
 properties of a WHATWG `URL` object.
 
 WHATWG URL's `origin` property includes `protocol` and `host`, but not
 `username` or `password`.
 
 ```txt
-┌─────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                            href                                             │
-├──────────┬──┬─────────────────────┬─────────────────────┬───────────────────────────┬───────┤
-│ protocol │  │        auth         │        host         │           path            │ hash  │
-│          │  │                     ├──────────────┬──────┼──────────┬────────────────┤       │
-│          │  │                     │   hostname   │ port │ pathname │     search     │       │
-│          │  │                     │              │      │          ├─┬──────────────┤       │
-│          │  │                     │              │      │          │ │    query     │       │
-"  https:   //    user   :   pass   @ sub.host.com : 8080   /p/a/t/h  ?  query=string   #hash "
-│          │  │          │          │   hostname   │ port │          │                │       │
-│          │  │          │          ├──────────────┴──────┤          │                │       │
-│ protocol │  │ username │ password │        host         │          │                │       │
-├──────────┴──┼──────────┴──────────┼─────────────────────┤          │                │       │
-│   origin    │                     │       origin        │ pathname │     search     │ hash  │
-├─────────────┴─────────────────────┴─────────────────────┴──────────┴────────────────┴───────┤
-│                                            href                                             │
-└─────────────────────────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                              href                                              │
+├──────────┬──┬─────────────────────┬────────────────────────┬───────────────────────────┬───────┤
+│ protocol │  │        auth         │          host          │           path            │ hash  │
+│          │  │                     ├─────────────────┬──────┼──────────┬────────────────┤       │
+│          │  │                     │    hostname     │ port │ pathname │     search     │       │
+│          │  │                     │                 │      │          ├─┬──────────────┤       │
+│          │  │                     │                 │      │          │ │    query     │       │
+"  https:   //    user   :   pass   @ sub.example.com : 8080   /p/a/t/h  ?  query=string   #hash "
+│          │  │          │          │    hostname     │ port │          │                │       │
+│          │  │          │          ├─────────────────┴──────┤          │                │       │
+│ protocol │  │ username │ password │          host          │          │                │       │
+├──────────┴──┼──────────┴──────────┼────────────────────────┤          │                │       │
+│   origin    │                     │         origin         │ pathname │     search     │ hash  │
+├─────────────┴─────────────────────┴────────────────────────┴──────────┴────────────────┴───────┤
+│                                              href                                              │
+└────────────────────────────────────────────────────────────────────────────────────────────────┘
 (all spaces in the "" line should be ignored — they are purely for formatting)
 ```
 
@@ -58,7 +54,7 @@ Parsing the URL string using the WHATWG API:
 
 ```js
 const myURL =
-  new URL('https://user:pass@sub.host.com:8080/p/a/t/h?query=string#hash');
+  new URL('https://user:pass@sub.example.com:8080/p/a/t/h?query=string#hash');
 ```
 
 Parsing the URL string using the Legacy API:
@@ -66,14 +62,16 @@ Parsing the URL string using the Legacy API:
 ```js
 const url = require('url');
 const myURL =
-  url.parse('https://user:pass@sub.host.com:8080/p/a/t/h?query=string#hash');
+  url.parse('https://user:pass@sub.example.com:8080/p/a/t/h?query=string#hash');
 ```
 
 ## The WHATWG URL API
 
 ### Class: URL
 <!-- YAML
-added: v7.0.0
+added:
+  - v7.0.0
+  - v6.13.0
 changes:
   - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18281
@@ -91,7 +89,7 @@ using the `delete` keyword on any properties of `URL` objects (e.g. `delete
 myURL.protocol`, `delete myURL.pathname`, etc) has no effect but will still
 return `true`.
 
-#### Constructor: new URL(input[, base])
+#### Constructor: new URL(input\[, base\])
 
 * `input` {string} The absolute or relative input URL to parse. If `input`
   is relative, then `base` is required. If `input` is absolute, the `base`
@@ -120,8 +118,8 @@ Unicode characters appearing within the hostname of `input` will be
 automatically converted to ASCII using the [Punycode][] algorithm.
 
 ```js
-const myURL = new URL('https://你好你好');
-// https://xn--6qqa088eba/
+const myURL = new URL('https://測試');
+// https://xn--g6w251d/
 ```
 
 This feature is only available if the `node` executable was compiled with
@@ -132,23 +130,23 @@ and a `base` is provided, it is advised to validate that the `origin` of
 the `URL` object is what is expected.
 
 ```js
-let myURL = new URL('http://anotherExample.org/', 'https://example.org/');
-// http://anotherexample.org/
+let myURL = new URL('http://Example.com/', 'https://example.org/');
+// http://example.com/
 
-myURL = new URL('https://anotherExample.org/', 'https://example.org/');
-// https://anotherexample.org/
+myURL = new URL('https://Example.com/', 'https://example.org/');
+// https://example.com/
 
-myURL = new URL('foo://anotherExample.org/', 'https://example.org/');
-// foo://anotherExample.org/
+myURL = new URL('foo://Example.com/', 'https://example.org/');
+// foo://Example.com/
 
-myURL = new URL('http:anotherExample.org/', 'https://example.org/');
-// http://anotherexample.org/
+myURL = new URL('http:Example.com/', 'https://example.org/');
+// http://example.com/
 
-myURL = new URL('https:anotherExample.org/', 'https://example.org/');
-// https://example.org/anotherExample.org/
+myURL = new URL('https:Example.com/', 'https://example.org/');
+// https://example.org/Example.com/
 
-myURL = new URL('foo:anotherExample.org/', 'https://example.org/');
-// foo:anotherExample.org/
+myURL = new URL('foo:Example.com/', 'https://example.org/');
+// foo:Example.com/
 ```
 
 #### url.hash
@@ -168,7 +166,7 @@ console.log(myURL.href);
 ```
 
 Invalid URL characters included in the value assigned to the `hash` property
-are [percent-encoded][]. Note that the selection of which characters to
+are [percent-encoded][]. The selection of which characters to
 percent-encode may vary somewhat from what the [`url.parse()`][] and
 [`url.format()`][] methods would produce.
 
@@ -249,12 +247,12 @@ console.log(myURL.origin);
 ```
 
 ```js
-const idnURL = new URL('https://你好你好');
+const idnURL = new URL('https://測試');
 console.log(idnURL.origin);
-// Prints https://xn--6qqa088eba
+// Prints https://xn--g6w251d
 
 console.log(idnURL.hostname);
-// Prints xn--6qqa088eba
+// Prints xn--g6w251d
 ```
 
 #### url.password
@@ -274,7 +272,7 @@ console.log(myURL.href);
 ```
 
 Invalid URL characters included in the value assigned to the `password` property
-are [percent-encoded][]. Note that the selection of which characters to
+are [percent-encoded][]. The selection of which characters to
 percent-encode may vary somewhat from what the [`url.parse()`][] and
 [`url.format()`][] methods would produce.
 
@@ -295,7 +293,7 @@ console.log(myURL.href);
 ```
 
 Invalid URL characters included in the value assigned to the `pathname`
-property are [percent-encoded][]. Note that the selection of which characters
+property are [percent-encoded][]. The selection of which characters
 to percent-encode may vary somewhat from what the [`url.parse()`][] and
 [`url.format()`][] methods would produce.
 
@@ -304,6 +302,31 @@ to percent-encode may vary somewhat from what the [`url.parse()`][] and
 * {string}
 
 Gets and sets the port portion of the URL.
+
+The port value may be a number or a string containing a number in the range
+`0` to `65535` (inclusive). Setting the value to the default port of the
+`URL` objects given `protocol` will result in the `port` value becoming
+the empty string (`''`).
+
+The port value can be an empty string in which case the port depends on
+the protocol/scheme:
+
+| protocol | port |
+| -------- | ---- |
+| "ftp"    | 21   |
+| "file"   |      |
+| "gopher" | 70   |
+| "http"   | 80   |
+| "https"  | 443  |
+| "ws"     | 80   |
+| "wss"    | 443  |
+
+Upon assigning a value to the port, the value will first be converted to a
+string using `.toString()`.
+
+If that string is invalid but it begins with a number, the leading number is
+assigned to `port`.
+If the number lies outside the range denoted above, it is ignored.
 
 ```js
 const myURL = new URL('https://example.org:8888');
@@ -346,20 +369,7 @@ console.log(myURL.port);
 // Prints 1234
 ```
 
-The port value may be set as either a number or as a string containing a number
-in the range `0` to `65535` (inclusive). Setting the value to the default port
-of the `URL` objects given `protocol` will result in the `port` value becoming
-the empty string (`''`).
-
-Upon assigning a value to the port, the value will first be converted to a
-string using `.toString()`.
-
-If that string is invalid but it begins with a number, the leading number is
-assigned to `port`.
-Otherwise, or if the number lies outside the range denoted above,
-it is ignored.
-
-Note that numbers which contain a decimal point,
+Numbers which contain a decimal point,
 such as floating-point numbers or numbers in scientific notation,
 are not an exception to this rule.
 Leading numbers up to the decimal point will be set as the URL's port,
@@ -389,6 +399,46 @@ console.log(myURL.href);
 
 Invalid URL protocol values assigned to the `protocol` property are ignored.
 
+##### Special Schemes
+
+The [WHATWG URL Standard][] considers a handful of URL protocol schemes to be
+_special_ in terms of how they are parsed and serialized. When a URL is
+parsed using one of these special protocols, the `url.protocol` property
+may be changed to another special protocol but cannot be changed to a
+non-special protocol, and vice versa.
+
+For instance, changing from `http` to `https` works:
+
+```js
+const u = new URL('http://example.org');
+u.protocol = 'https';
+console.log(u.href);
+// https://example.org
+```
+
+However, changing from `http` to a hypothetical `fish` protocol does not
+because the new protocol is not special.
+
+```js
+const u = new URL('http://example.org');
+u.protocol = 'fish';
+console.log(u.href);
+// http://example.org
+```
+
+Likewise, changing from a non-special protocol to a special protocol is also
+not permitted:
+
+```js
+const u = new URL('fish://example.org');
+u.protocol = 'http';
+console.log(u.href);
+// fish://example.org
+```
+
+According to the WHATWG URL Standard, special protocol schemes are `ftp`,
+`file`, `gopher`, `http`, `https`, `ws`, and `wss`.
+
 #### url.search
 
 * {string}
@@ -406,7 +456,7 @@ console.log(myURL.href);
 ```
 
 Any invalid URL characters appearing in the value assigned the `search`
-property will be [percent-encoded][]. Note that the selection of which
+property will be [percent-encoded][]. The selection of which
 characters to percent-encode may vary somewhat from what the [`url.parse()`][]
 and [`url.format()`][] methods would produce.
 
@@ -436,7 +486,7 @@ console.log(myURL.href);
 ```
 
 Any invalid URL characters appearing in the value assigned the `username`
-property will be [percent-encoded][]. Note that the selection of which
+property will be [percent-encoded][]. The selection of which
 characters to percent-encode may vary somewhat from what the [`url.parse()`][]
 and [`url.format()`][] methods would produce.
 
@@ -473,7 +523,9 @@ console.log(JSON.stringify(myURLs));
 
 ### Class: URLSearchParams
 <!-- YAML
-added: v7.5.0
+added:
+  - v7.5.0
+  - v6.13.0
 changes:
   - version: v10.0.0
     pr-url: https://github.com/nodejs/node/pull/18281
@@ -550,7 +602,9 @@ console.log(params.toString());
 
 #### Constructor: new URLSearchParams(obj)
 <!-- YAML
-added: v7.10.0
+added:
+  - v7.10.0
+  - v6.13.0
 -->
 
 * `obj` {Object} An object representing a collection of key-value pairs
@@ -575,7 +629,9 @@ console.log(params.toString());
 
 #### Constructor: new URLSearchParams(iterable)
 <!-- YAML
-added: v7.10.0
+added:
+  - v7.10.0
+  - v6.13.0
 -->
 
 * `iterable` {Iterable} An iterable object whose elements are key-value pairs
@@ -650,7 +706,7 @@ is the `name`, the second item of the `Array` is the `value`.
 
 Alias for [`urlSearchParams[@@iterator]()`][`urlSearchParams@@iterator()`].
 
-#### urlSearchParams.forEach(fn[, thisArg])
+#### urlSearchParams.forEach(fn\[, thisArg\])
 
 * `fn` {Function} Invoked for each name-value pair in the query
 * `thisArg` {Object} To be used as `this` value for when `fn` is called
@@ -733,7 +789,9 @@ console.log(params.toString());
 
 #### urlSearchParams.sort()
 <!-- YAML
-added: v7.7.0
+added:
+  - v7.7.0
+  - v6.13.0
 -->
 
 Sort all existing name-value pairs in-place by their names. Sorting is done
@@ -784,7 +842,9 @@ for (const [name, value] of params) {
 
 ### url.domainToASCII(domain)
 <!-- YAML
-added: v7.4.0
+added:
+  - v7.4.0
+  - v6.13.0
 -->
 
 * `domain` {string}
@@ -807,7 +867,9 @@ console.log(url.domainToASCII('xn--iñvalid.com'));
 
 ### url.domainToUnicode(domain)
 <!-- YAML
-added: v7.4.0
+added:
+  - v7.4.0
+  - v6.13.0
 -->
 
 * `domain` {string}
@@ -828,7 +890,32 @@ console.log(url.domainToUnicode('xn--iñvalid.com'));
 // Prints an empty string
 ```
 
-### url.format(URL[, options])
+### url.fileURLToPath(url)
+<!-- YAML
+added: v10.12.0
+-->
+
+* `url` {URL | string} The file URL string or URL object to convert to a path.
+* Returns: {string} The fully-resolved platform-specific Node.js file path.
+
+This function ensures the correct decodings of percent-encoded characters as
+well as ensuring a cross-platform valid absolute path string.
+
+```js
+new URL('file:///C:/path/').pathname;    // Incorrect: /C:/path/
+fileURLToPath('file:///C:/path/');       // Correct:   C:\path\ (Windows)
+
+new URL('file://nas/foo.txt').pathname;  // Incorrect: /foo.txt
+fileURLToPath('file://nas/foo.txt');     // Correct:   \\nas\foo.txt (Windows)
+
+new URL('file:///你好.txt').pathname;    // Incorrect: /%E4%BD%A0%E5%A5%BD.txt
+fileURLToPath('file:///你好.txt');       // Correct:   /你好.txt (POSIX)
+
+new URL('file:///hello world').pathname; // Incorrect: /hello%20world
+fileURLToPath('file:///hello world');    // Correct:   /hello world (POSIX)
+```
+
+### url.format(URL\[, options\])
 <!-- YAML
 added: v7.6.0
 -->
@@ -854,24 +941,54 @@ string serializations of the URL. These are not, however, customizable in
 any way. The `url.format(URL[, options])` method allows for basic customization
 of the output.
 
-For example:
-
 ```js
-const myURL = new URL('https://a:b@你好你好?abc#foo');
+const myURL = new URL('https://a:b@測試?abc#foo');
 
 console.log(myURL.href);
-// Prints https://a:b@xn--6qqa088eba/?abc#foo
+// Prints https://a:b@xn--g6w251d/?abc#foo
 
 console.log(myURL.toString());
-// Prints https://a:b@xn--6qqa088eba/?abc#foo
+// Prints https://a:b@xn--g6w251d/?abc#foo
 
 console.log(url.format(myURL, { fragment: false, unicode: true, auth: false }));
-// Prints 'https://你好你好/?abc'
+// Prints 'https://測試/?abc'
+```
+
+### url.pathToFileURL(path)
+<!-- YAML
+added: v10.12.0
+-->
+
+* `path` {string} The path to convert to a File URL.
+* Returns: {URL} The file URL object.
+
+This function ensures that `path` is resolved absolutely, and that the URL
+control characters are correctly encoded when converting into a File URL.
+
+```js
+new URL(__filename);                // Incorrect: throws (POSIX)
+new URL(__filename);                // Incorrect: C:\... (Windows)
+pathToFileURL(__filename);          // Correct:   file:///... (POSIX)
+pathToFileURL(__filename);          // Correct:   file:///C:/... (Windows)
+
+new URL('/foo#1', 'file:');         // Incorrect: file:///foo#1
+pathToFileURL('/foo#1');            // Correct:   file:///foo%231 (POSIX)
+
+new URL('/some/path%.js', 'file:'); // Incorrect: file:///some/path%
+pathToFileURL('/some/path%.js');    // Correct:   file:///some/path%25 (POSIX)
 ```
 
 ## Legacy URL API
 
+> Stability: 0 - Deprecated: Use the WHATWG URL API instead.
+
 ### Legacy `urlObject`
+<!-- YAML
+changes:
+  - version: v11.0.0
+    pr-url: https://github.com/nodejs/node/pull/22715
+    description: The Legacy URL API is deprecated. Use the WHATWG URL API.
+-->
 
 The legacy `urlObject` (`require('url').Url`) is created and returned by the
 `url.parse()` function.
@@ -879,17 +996,17 @@ The legacy `urlObject` (`require('url').Url`) is created and returned by the
 #### urlObject.auth
 
 The `auth` property is the username and password portion of the URL, also
-referred to as "userinfo". This string subset follows the `protocol` and
-double slashes (if present) and precedes the `host` component, delimited by an
-ASCII "at sign" (`@`). The format of the string is `{username}[:{password}]`,
-with the `[:{password}]` portion being optional.
+referred to as _userinfo_. This string subset follows the `protocol` and
+double slashes (if present) and precedes the `host` component, delimited by `@`.
+The string is either the username, or it is the username and password separated
+by `:`.
 
 For example: `'user:pass'`.
 
 #### urlObject.hash
 
-The `hash` property consists of the "fragment" portion of the URL including
-the leading ASCII hash (`#`) character.
+The `hash` property is the fragment identifier portion of the URL including the
+leading `#` character.
 
 For example: `'#hash'`.
 
@@ -898,21 +1015,21 @@ For example: `'#hash'`.
 The `host` property is the full lower-cased host portion of the URL, including
 the `port` if specified.
 
-For example: `'sub.host.com:8080'`.
+For example: `'sub.example.com:8080'`.
 
 #### urlObject.hostname
 
 The `hostname` property is the lower-cased host name portion of the `host`
 component *without* the `port` included.
 
-For example: `'sub.host.com'`.
+For example: `'sub.example.com'`.
 
 #### urlObject.href
 
 The `href` property is the full URL string that was parsed with both the
 `protocol` and `host` components converted to lower-case.
 
-For example: `'http://user:pass@sub.host.com:8080/p/a/t/h?query=string#hash'`.
+For example: `'http://user:pass@sub.example.com:8080/p/a/t/h?query=string#hash'`.
 
 #### urlObject.path
 
@@ -930,7 +1047,7 @@ is everything following the `host` (including the `port`) and before the start
 of the `query` or `hash` components, delimited by either the ASCII question
 mark (`?`) or hash (`#`) characters.
 
-For example `'/p/a/t/h'`.
+For example: `'/p/a/t/h'`.
 
 No decoding of the path string is performed.
 
@@ -977,6 +1094,9 @@ forward-slash characters (`/`) are required following the colon in the
 <!-- YAML
 added: v0.1.25
 changes:
+  - version: v11.0.0
+    pr-url: https://github.com/nodejs/node/pull/22715
+    description: The Legacy URL API is deprecated. Use the WHATWG URL API.
   - version: v7.0.0
     pr-url: https://github.com/nodejs/node/pull/7234
     description: URLs with a `file:` scheme will now always use the correct
@@ -1019,9 +1139,9 @@ The formatting process operates as follows:
   colon (`:`) character, the literal string `:` will be appended to `result`.
 * If either of the following conditions is true, then the literal string `//`
   will be appended to `result`:
-    * `urlObject.slashes` property is true;
-    * `urlObject.protocol` begins with `http`, `https`, `ftp`, `gopher`, or
-      `file`;
+  * `urlObject.slashes` property is true;
+  * `urlObject.protocol` begins with `http`, `https`, `ftp`, `gopher`, or
+    `file`;
 * If the value of the `urlObject.auth` property is truthy, and either
   `urlObject.host` or `urlObject.hostname` are not `undefined`, the value of
   `urlObject.auth` will be coerced into a string and appended to `result`
@@ -1061,10 +1181,13 @@ The formatting process operates as follows:
   string, an [`Error`][] is thrown.
 * `result` is returned.
 
-### url.parse(urlString[, parseQueryString[, slashesDenoteHost]])
+### url.parse(urlString\[, parseQueryString\[, slashesDenoteHost\]\])
 <!-- YAML
 added: v0.1.25
 changes:
+  - version: v11.0.0
+    pr-url: https://github.com/nodejs/node/pull/22715
+    description: The Legacy URL API is deprecated. Use the WHATWG URL API.
   - version: v9.0.0
     pr-url: https://github.com/nodejs/node/pull/13606
     description: The `search` property on the returned URL object is now `null`
@@ -1093,6 +1216,9 @@ A `URIError` is thrown if the `auth` property is present but cannot be decoded.
 <!-- YAML
 added: v0.1.25
 changes:
+  - version: v11.0.0
+    pr-url: https://github.com/nodejs/node/pull/22715
+    description: The Legacy URL API is deprecated. Use the WHATWG URL API.
   - version: v6.6.0
     pr-url: https://github.com/nodejs/node/pull/8215
     description: The `auth` fields are now kept intact when `from` and `to`
@@ -1111,8 +1237,6 @@ changes:
 
 The `url.resolve()` method resolves a target URL relative to a base URL in a
 manner similar to that of a Web browser resolving an anchor tag HREF.
-
-For example:
 
 ```js
 const url = require('url');
@@ -1171,14 +1295,14 @@ specific conditions, in addition to all other cases.
 
 When non-ASCII characters appear within a hostname, the hostname is encoded
 using the [Punycode][] algorithm. Note, however, that a hostname *may* contain
-*both* Punycode encoded and percent-encoded characters. For example:
+*both* Punycode encoded and percent-encoded characters:
 
 ```js
-const myURL = new URL('https://%CF%80.com/foo');
+const myURL = new URL('https://%CF%80.example.com/foo');
 console.log(myURL.href);
-// Prints https://xn--1xa.com/foo
+// Prints https://xn--1xa.example.com/foo
 console.log(myURL.origin);
-// Prints https://π.com
+// Prints https://xn--1xa.example.com
 ```
 
 [`Error`]: errors.html#errors_class_error

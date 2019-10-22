@@ -1,4 +1,3 @@
-// Flags: --expose-internals
 'use strict';
 const common = require('../common');
 
@@ -6,8 +5,6 @@ common.skipIfInspectorDisabled();
 
 const assert = require('assert');
 const { NodeInstance } = require('../common/inspector-helper.js');
-
-common.crashOnUnhandledRejection();
 
 async function test() {
   const madeUpHost = '111.111.111.111:11111';

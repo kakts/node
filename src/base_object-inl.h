@@ -26,7 +26,7 @@
 
 #include "base_object.h"
 #include "env-inl.h"
-#include "util-inl.h"
+#include "util.h"
 #include "v8.h"
 
 namespace node {
@@ -40,9 +40,8 @@ BaseObject::BaseObject(Environment* env, v8::Local<v8::Object> object)
   env_->AddCleanupHook(DeleteMe, static_cast<void*>(this));
 }
 
-
 BaseObject::~BaseObject() {
-  env_->RemoveCleanupHook(DeleteMe, static_cast<void*>(this));
+  RemoveCleanupHook();
 
   if (persistent_handle_.IsEmpty()) {
     // This most likely happened because the weak callback below cleared it.
@@ -55,16 +54,27 @@ BaseObject::~BaseObject() {
   }
 }
 
+void BaseObject::RemoveCleanupHook() {
+  env_->RemoveCleanupHook(DeleteMe, static_cast<void*>(this));
+}
 
-Persistent<v8::Object>& BaseObject::persistent() {
+v8::Global<v8::Object>& BaseObject::persistent() {
   return persistent_handle_;
 }
 
 
-v8::Local<v8::Object> BaseObject::object() {
-  return PersistentToLocal(env_->isolate(), persistent_handle_);
+v8::Local<v8::Object> BaseObject::object() const {
+  return PersistentToLocal::Default(env_->isolate(), persistent_handle_);
 }
 
+v8::Local<v8::Object> BaseObject::object(v8::Isolate* isolate) const {
+  v8::Local<v8::Object> handle = object();
+
+  DCHECK_EQ(handle->CreationContext()->GetIsolate(), isolate);
+  DCHECK_EQ(env_->isolate(), isolate);
+
+  return handle;
+}
 
 Environment* BaseObject::env() const {
   return env_;
@@ -83,23 +93,16 @@ T* BaseObject::FromJSObject(v8::Local<v8::Object> object) {
 }
 
 
-void BaseObject::DeleteMe(void* data) {
-  BaseObject* self = static_cast<BaseObject*>(data);
-  delete self;
-}
-
-
 void BaseObject::MakeWeak() {
   persistent_handle_.SetWeak(
       this,
       [](const v8::WeakCallbackInfo<BaseObject>& data) {
-        BaseObject* obj = data.GetParameter();
+        std::unique_ptr<BaseObject> obj(data.GetParameter());
         // Clear the persistent handle so that ~BaseObject() doesn't attempt
         // to mess with internal fields, since the JS object may have
         // transitioned into an invalid state.
         // Refs: https://github.com/nodejs/node/issues/18897
         obj->persistent_handle_.Reset();
-        delete obj;
       }, v8::WeakCallbackType::kParameter);
 }
 
@@ -112,16 +115,30 @@ void BaseObject::ClearWeak() {
 v8::Local<v8::FunctionTemplate>
 BaseObject::MakeLazilyInitializedJSTemplate(Environment* env) {
   auto constructor = [](const v8::FunctionCallbackInfo<v8::Value>& args) {
-#ifdef DEBUG
-    CHECK(args.IsConstructCall());
-    CHECK_GT(args.This()->InternalFieldCount(), 0);
-#endif
+    DCHECK(args.IsConstructCall());
+    DCHECK_GT(args.This()->InternalFieldCount(), 0);
     args.This()->SetAlignedPointerInInternalField(0, nullptr);
   };
 
   v8::Local<v8::FunctionTemplate> t = env->NewFunctionTemplate(constructor);
   t->InstanceTemplate()->SetInternalFieldCount(1);
   return t;
+}
+
+template <int Field>
+void BaseObject::InternalFieldGet(
+    v8::Local<v8::String> property,
+    const v8::PropertyCallbackInfo<v8::Value>& info) {
+  info.GetReturnValue().Set(info.This()->GetInternalField(Field));
+}
+
+template <int Field, bool (v8::Value::* typecheck)() const>
+void BaseObject::InternalFieldSet(v8::Local<v8::String> property,
+                                  v8::Local<v8::Value> value,
+                                  const v8::PropertyCallbackInfo<void>& info) {
+  // This could be e.g. value->IsFunction().
+  CHECK(((*value)->*typecheck)());
+  info.This()->SetInternalField(Field, value);
 }
 
 }  // namespace node

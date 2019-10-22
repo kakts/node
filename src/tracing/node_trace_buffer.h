@@ -51,7 +51,7 @@ class InternalTraceBuffer {
 class NodeTraceBuffer : public TraceBuffer {
  public:
   NodeTraceBuffer(size_t max_chunks, Agent* agent, uv_loop_t* tracing_loop);
-  ~NodeTraceBuffer();
+  ~NodeTraceBuffer() override;
 
   TraceObject* AddTraceEvent(uint64_t* handle) override;
   TraceObject* GetEventByHandle(uint64_t handle) override;
@@ -72,7 +72,6 @@ class NodeTraceBuffer : public TraceBuffer {
   Mutex exit_mutex_;
   // Used to wait until async handles have been closed.
   ConditionVariable exit_cond_;
-  Agent* agent_;
   std::atomic<InternalTraceBuffer*> current_buf_;
   InternalTraceBuffer buffer1_;
   InternalTraceBuffer buffer2_;
